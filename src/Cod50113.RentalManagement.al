@@ -1,0 +1,96 @@
+namespace ALProject.ALProject;
+
+codeunit 50113 "Rental Management"
+{
+    procedure StartRental(var RentalHeader: Record "Rental Header")
+    var
+        RentalLine: Record "Rental Line";
+        BicycleRec: Record Bicycle;
+    begin
+        // 1. Preveri status izposoje.
+        if RentalHeader.Status <> RentalHeader.Status::Open then
+            Error('Izposojo lahko začnemo samo, če je njen status Open.');
+
+        // 2. Poišči vrstice trenutne izposoje.
+        RentalLine.SetRange("Rental No.", RentalHeader."No.");
+
+        if RentalLine.IsEmpty() then
+            Error('Izposoja mora vsebovati vsaj eno vrstico.');
+
+        // 3. Najprej preveri vsa kolesa, brez spreminjanja podatkov.
+        if RentalLine.FindSet() then
+            repeat
+                if not BicycleRec.Get(RentalLine."Bicycle No.") then
+                    Error(
+                        'Kolo %1 ne obstaja.',
+                        RentalLine."Bicycle No.");
+
+                if BicycleRec.Status <> BicycleRec.Status::Available then
+                    Error(
+                        'Kolo %1 ni na voljo.',
+                        RentalLine."Bicycle No.");
+            until RentalLine.Next() = 0;
+
+        // 4. Vsa preverjanja so uspešna. Spremeni status koles.
+        if RentalLine.FindSet() then
+            repeat
+                BicycleRec.Get(RentalLine."Bicycle No.");
+                BicycleRec.Validate(Status, BicycleRec.Status::Rented);
+                BicycleRec.Modify(true);
+            until RentalLine.Next() = 0;
+
+        // 5. Spremeni status izposoje.
+        RentalHeader.Validate(Status, RentalHeader.Status::Active);
+        RentalHeader.Modify(true);
+    end;
+
+    procedure ProcessReturn(var RentalHeader: Record "Rental Header")
+    var
+        RentalLine: Record "Rental Line";
+        BicycleRec: Record Bicycle;
+        RentalDays: Integer;
+    begin
+        // 1. Preveri status izposoje.
+        if RentalHeader.Status <> RentalHeader.Status::Active then
+            Error('Vrnemo lahko samo izposojo s statusom Active.');
+
+        // 2. Preveri, ali izposoja vsebuje vrstice.
+        RentalLine.SetRange("Rental No.", RentalHeader."No.");
+
+        if RentalLine.IsEmpty() then
+            Error('Izposoja mora vsebovati vsaj eno vrstico.');
+
+        // 3. Preveri, ali vsa navedena kolesa obstajajo.
+        if RentalLine.FindSet() then
+            repeat
+                if not BicycleRec.Get(RentalLine."Bicycle No.") then
+                    Error(
+                        'Kolo %1 ne obstaja.',
+                        RentalLine."Bicycle No.");
+            until RentalLine.Next() = 0;
+
+        // 4. Izračunaj število dni izposoje. Če je rezultat manjši od 1, ga nastavi na 1.
+        RentalDays :=
+            Today() - RentalHeader."Rental Date" + 1;
+        if RentalDays < 1 then
+            RentalDays := 1;
+
+        // 5. Kolesa označi kot razpoložljiva.
+        if RentalLine.FindSet() then
+            repeat
+                BicycleRec.Get(RentalLine."Bicycle No.");
+                BicycleRec.Validate(
+                    Status,
+                    BicycleRec.Status::Available);
+                BicycleRec.Modify(true);
+
+                RentalLine.Validate("Rental Days", RentalDays);
+                RentalLine.Modify(true);
+            until RentalLine.Next() = 0;
+
+        // 6. Zabeleži vračilo in spremeni status glave.
+        RentalHeader.Validate("Actual Return Date", Today());
+        RentalHeader.Validate(Status, RentalHeader.Status::Returned);
+        RentalHeader.Modify(true);
+    end;
+}

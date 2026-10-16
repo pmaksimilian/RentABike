@@ -1,5 +1,3 @@
-namespace ALProject.ALProject;
-
 page 50111 "Rental Card"
 {
     PageType = Card;
@@ -88,6 +86,21 @@ page 50111 "Rental Card"
                     CurrPage.Update(false);
                 end;
             }
+            action(CreateSalesInvoice)
+            {
+                Caption = 'Create Sales Invoice';
+                ApplicationArea = All;
+                Image = CreateDocument;
+                ToolTip = 'Creates a sales invoice from this rental.';
+
+                trigger OnAction()
+                var
+                    RentalManagement: Codeunit "Rental Management";
+                begin
+                    RentalManagement.CreateSalesInvoice(Rec);
+                end;
+            }
         }
+
     }
 }

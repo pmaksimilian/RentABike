@@ -31,28 +31,55 @@ table 50109 "Rental Line"
             trigger OnValidate()
             var
                 BicycleRec: Record Bicycle;
-                RentalType: Record "Rental Type";
                 RentalHeader: Record "Rental Header";
+                RentalType: Record "Rental Type";
+                RentalPriceList: Record "Rental Price List";
             begin
-                if not BicycleRec.Get("Bicycle No.") then
+                if "Bicycle No." = '' then
                     exit;
 
-                if BicycleRec.Status <> BicycleRec.Status::Available then
-                    Error('Only available bicycles can be rented.');
+                if not RentalHeader.Get("Rental No.") then
+                    Error('Za vrstico izposoje ne obstaja glava izposoje.');
+
+                if not BicycleRec.Get("Bicycle No.") then
+                    Error('Izbranega kolesa ni mogoče najti.');
+
+                if BicycleRec."Rental Type Code" = '' then
+                    Error('Izbrano kolo nima določenega tipa kolesa.');
+
+                if not RentalType.Get(BicycleRec."Rental Type Code") then
+                    Error('Tip kolesa %1 ne obstaja.', BicycleRec."Rental Type Code");
 
                 Description := BicycleRec.Description;
 
-                if RentalType.Get(BicycleRec."Rental Type Code") then
-                    Validate("Daily Rate", RentalType."Daily Rate");
+                RentalPriceList.SetRange(
+                    "Rental Type Code",
+                    BicycleRec."Rental Type Code");
+                RentalPriceList.SetFilter(
+                    "Starting Date",
+                    '<=%1',
+                    RentalHeader."Rental Date");
+                RentalPriceList.SetFilter(
+                    "Ending Date",
+                    '>=%1',
+                    RentalHeader."Rental Date");
 
-                if RentalHeader.Get("Rental No.") then
-                    if (RentalHeader."Rental Date" <> 0D) and
-                    (RentalHeader."Expected Return Date" <> 0D)
-                    then
-                        Validate(
-                            "Rental Days",
-                            RentalHeader."Expected Return Date" -
-                            RentalHeader."Rental Date");
+                if RentalPriceList.FindFirst() then
+                    Validate("Daily Rate", RentalPriceList."Daily Rate")
+                else begin
+                    if RentalType."Daily Rate" < 0 then
+                        Error('Osnovna cena za tip kolesa ne sme biti negativna.');
+
+                    Validate("Daily Rate", RentalType."Daily Rate");
+                end;
+
+                if RentalHeader."Rental Date" <> 0D then
+                    Validate(
+                        "Rental Days",
+                        RentalHeader."Expected Return Date" -
+                        RentalHeader."Rental Date" + 1);
+
+                UpdateLineAmount();
             end;
         }
 

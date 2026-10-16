@@ -1,0 +1,19 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Bicycles>
+    <Bicycle>
+        <No>BIKE100</No>
+        <RentalType>MTB</RentalType>
+        <Description>Mountain Bike 100</Description>
+    </Bicycle>
+    <Bicycle>
+        <No>BIKE101</No>
+        <RentalType>CITY</RentalType>
+        <Description>City Bike 101</Description>
+    </Bicycle>
+    <Bicycle>
+        <No>BIKE102</No>
+        <RentalType>INVALID</RentalType>
+        <Description>Invalid Type Bike</Description>
+    </Bicycle>
+</Bicycles>

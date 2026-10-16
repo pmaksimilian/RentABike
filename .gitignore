@@ -1,0 +1,22 @@
+# Symbols and compiled output
+.alpackages/
+.snapshots/
+.output/
+*.app
+
+# Local debug config (contains server/tenant/credentials info)
+.vscode/launch.json
+
+# Generated translation and runtime files
+*.g.xlf
+*.flf
+rad.json
+
+# Test runner / local tooling
+.altestrunner/
+TestResults/
+*.log
+
+# OS / editor noise
+.DS_Store
+Thumbs.db

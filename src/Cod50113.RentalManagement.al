@@ -1,12 +1,27 @@
-namespace ALProject.ALProject;
-
 codeunit 50113 "Rental Management"
 {
     procedure StartRental(var RentalHeader: Record "Rental Header")
     var
         RentalLine: Record "Rental Line";
         BicycleRec: Record Bicycle;
+        CustomerRec: Record Customer;
+        ActiveRentalHeader: Record "Rental Header";
+        ActiveRentalCount: Integer;
     begin
+        // 0. Preverjanje stranke iz faze 5
+        if not CustomerRec.Get(RentalHeader."Customer No.") then
+            Error('Stranke izposoje ni mogoče najti.');
+
+        ActiveRentalHeader.SetRange("Customer No.", RentalHeader."Customer No.");
+        ActiveRentalHeader.SetRange(Status, ActiveRentalHeader.Status::Active);
+
+        ActiveRentalCount := ActiveRentalHeader.Count();
+
+        if ActiveRentalCount >= CustomerRec."Max Active Rentals" then
+            Error(
+                'Stranka je že dosegla maksimalno dovoljeno število aktivnih izposoj.');
+
+
         // 1. Preveri status izposoje.
         if RentalHeader.Status <> RentalHeader.Status::Open then
             Error('Izposojo lahko začnemo samo, če je njen status Open.');

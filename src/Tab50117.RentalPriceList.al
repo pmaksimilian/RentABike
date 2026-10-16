@@ -1,5 +1,5 @@
 
-table 50116 "Rental Price List"
+table 50117 "Rental Price List"
 {
     Caption = 'Rental Price List';
     DataClassification = CustomerContent;

@@ -1,5 +1,5 @@
 
-page 50117 "Rental Price List"
+page 50118 "Rental Price List"
 {
     Caption = 'Rental Price List';
     PageType = List;

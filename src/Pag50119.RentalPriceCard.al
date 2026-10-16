@@ -1,5 +1,5 @@
 
-page 50118 "Rental Price Card"
+page 50119 "Rental Price Card"
 {
     Caption = 'Rental Price Card';
     PageType = Card;
